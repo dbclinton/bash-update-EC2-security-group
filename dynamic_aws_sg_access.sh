@@ -5,7 +5,7 @@
 # Don't use uppercase for variables that aren't inherited from the environment.
 # Use 'echo -e' by default because science.
 # Terminate lines with semicolons because voodoo.
-# Quote your variables interpolations just about everywhere.
+# Quote your variable interpolations just about everywhere.
 
 # Usage: ./dynamic_aws_sg_access.sh <Security Group Name>
 
