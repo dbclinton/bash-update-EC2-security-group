@@ -6,3 +6,4 @@ awk '{ print $0 "/32" }' < ip.txt > ipnew.txt
 export stuff=$(cat ipnew.txt)
 aws ec2 authorize-security-group-ingress --group-name NewGroup \
  --protocol tcp --port 22 --cidr $stuff
+
