@@ -7,7 +7,7 @@
 # Terminate lines with semicolons because voodoo.
 # Quote your variable interpolations just about everywhere.
 
-# Usage: ./dynamic_aws_sg_access.sh <Security Group Name> <Port>
+# Usage: ./dynamic_aws_sg_access.sh <Security Group Id> <Port>
 
 # Standardised error process. Errors to STDERR.
 function error_and_die() {
@@ -18,7 +18,7 @@ function error_and_die() {
 # Declare variables because autism.
 declare access_granted="false";
 declare allowed_cidrs;
-declare group_name="${1}"; # Define it here, or take it from "${1}", use GNU getopt... whatever you want.
+declare group_id="${1}"; # Define it here, or take it from "${1}", use GNU getopt... whatever you want.
 declare port="${2:-22}"
 declare my_cidr;
 declare my_ip;
@@ -35,7 +35,7 @@ allowed_cidrs="$(aws ec2 describe-security-groups \
                    --output text \
                    --query '
                      SecurityGroups[?
-                       GroupName==`'${group_name}'`
+                       GroupId==`'${group_id}'`
                      ].
                      [
                        IpPermissions[?
@@ -48,7 +48,7 @@ allowed_cidrs="$(aws ec2 describe-security-groups \
 
 # ... or go have a beer instead.
 [ "${allowed_cidrs}" == "Failed" ] \
-  && error_and_die "Failed to retrieve SSH ingress rules for ${group_name}";
+  && error_and_die "Failed to retrieve SSH ingress rules for ${group_id}";
 
 # With my_ip and allowed_cidrs known, clean-house by revoking all access that isn't from here.
 my_cidr="${my_ip}/32";
@@ -57,9 +57,9 @@ for cidr in ${allowed_cidrs}; do # Don't quote this string, bash needs to tokeni
   if [ "${cidr}" == "${my_cidr}" ]; then
     access_granted="true";
   else
-    echo -en "Revoking SSH access to ${group_name} from ${cidr}... ";
+    echo -en "Revoking SSH access to ${group_id} from ${cidr}... ";
     aws ec2 revoke-security-group-ingress \
-      --group-name ${group_name} \
+      --group-id ${group_id} \
       --protocol tcp \
       --port ${port} \
       --cidr ${cidr} \
@@ -73,9 +73,9 @@ if [ "${access_granted}" == "true" ]; then
   echo -e "Access already authorised from ${my_cidr}";
 else
   # If we didn't, we had better get it authorised.
-  echo -en "Authorising SSH access to ${group_name} from ${my_cidr}... ";
+  echo -en "Authorising SSH access to ${group_id} from ${my_cidr}... ";
   aws ec2 authorize-security-group-ingress \
-    --group-name ${group_name} \
+    --group-id ${group_id} \
     --protocol tcp \
     --port ${port} \
     --cidr ${my_cidr} \
